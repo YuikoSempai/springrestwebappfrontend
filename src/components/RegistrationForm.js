@@ -1,20 +1,26 @@
 import * as React from 'react';
 import TextField from '@mui/material/TextField';
 import {useState} from "react";
-import {Alert, AlertTitle, Button, Dialog, FormControl} from "@mui/material";
+import {Alert, AlertTitle, Dialog, FormControl} from "@mui/material";
+import LoadingButton from "@mui/lab/LoadingButton"
+import {useSelector} from "react-redux";
+import {useNavigate} from "react-router-dom";
 import Typography from "@mui/material/Typography";
 
-
-export default function MyForm() {
+export default function RegistrationForm() {
 
 
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
-    const [roles, setRoles] = useState('')
-    const url = 'http://localhost:8080/auth/registration'
     const [openSuccess, setOpenSuccess] = React.useState(false)
     const [openWarning, setOpenWarning] = React.useState(false)
     const [message, setMessage] = React.useState('')
+    const [registerLoading, setRegisterLoading] = React.useState(false);
+    const [loginLoading, setLoginLoading] = React.useState(false);
+
+    const url = useSelector(state => state.url) + '/auth/registration'
+    let navigate = useNavigate()
+
     const handleClickSuccess = () => {
         setOpenSuccess(!openSuccess);
     };
@@ -23,8 +29,15 @@ export default function MyForm() {
         setOpenWarning(!openWarning);
     }
 
+    const handleLogButton = () => {
+        setLoginLoading(true)
+        setTimeout(() => navigate("../login"), 1000)
+    }
+
     const sendData = function (event) {
-        if (username !== '' && password !== '' && roles !== '') {
+        if (username !== '' && password !== '') {
+            const roles = 0
+            setRegisterLoading(true);
             event.preventDefault()
             fetch(url, {
                 method: "POST", headers: {
@@ -32,30 +45,44 @@ export default function MyForm() {
                 }, body: JSON.stringify({username, password, roles})
             }).then(r => {
                     if (r.status !== 200) {
-                        setOpenWarning(true);
+                        handleClickSuccess();
                         setMessage("User is exists")
                     } else {
                         setMessage("User was register")
-                        setOpenSuccess(true);
-                        window.location.href = "http://localhost:8080";
+                        handleClickSuccess()
+                        navigate("../login")
                     }
+                    setRegisterLoading(false)
                 }
             ).catch(() => {
                 setMessage("Can't connect to the server")
-                setOpenWarning(true)
+                setRegisterLoading(false)
+                handleClickWarning()
             });
             setUsername('')
             setPassword('')
-            setRoles('')
+        } else {
+            setMessage("Not all fields are field")
+            setOpenWarning(true)
         }
     }
-
     return (
         <div>
-            <div style={{margin: 'auto'}}>
-                <h1>Register new user</h1>
+            <div style={{margin: '100px auto'}}>
+                <Typography
+                    variant="h3"
+                    sx={{display: {mobile: 'none', tablet: 'none', desktop: 'block'}}}
+                >
+                    Registration
+                </Typography>
+                <Typography
+                    variant="h4"
+                    sx={{display: {mobile: 'block', tablet: 'block', desktop: 'none'}}}
+                >
+                    Registration
+                </Typography>
             </div>
-            <FormControl>
+            <FormControl sx={{width: {mobile: "30%", desktop: "50%"}}}>
                 <div style={{margin: "10px 0 auto"}}>
                     <TextField
                         required
@@ -69,37 +96,45 @@ export default function MyForm() {
                 <div style={{margin: "10px 0 auto"}}>
                     <TextField
                         required
-                        id="outlined-required"
                         label="Password"
+                        type="password"
                         fullWidth
                         value={password}
                         onChange={event => setPassword(event.target.value)}
                     />
                 </div>
-                <div style={{margin: "10px 0 auto"}}>
-                    <TextField
-                        required
-                        id="outlined-required"
-                        label="Roles"
-                        fullWidth
-                        value={roles}
-                        onChange={event => setRoles(event.target.value)}
-                    />
+                <div sx={{width: {mobile: "20%", desktop: "40%"}}}>
+                    <LoadingButton
+                        variant="contained"
+                        onClick={sendData}
+                        loading={registerLoading}
+                        id="LoadingButton"
+                    >
+                        <Typography sx={{display: {mobile: 'none', tablet: 'flex'}}}>register user</Typography>
+                        <Typography sx={{display: {tablet: 'none', mobile: 'flex'}}}>Register</Typography>
+                    </LoadingButton>
+                    <LoadingButton
+                        variant="contained"
+                        onClick={handleLogButton}
+                        loading={loginLoading}
+                        id="LoadingButton"
+                    >
+                        <Typography sx={{display: {mobile: 'none', tablet: 'flex'}}}>Login Page</Typography>
+                        <Typography sx={{display: {tablet: 'none', mobile: 'flex'}}}>login</Typography>
+                    </LoadingButton>
+                    <Dialog open={openWarning} onClose={handleClickWarning}>
+                        <Alert severity="warning">
+                            <AlertTitle>Warning</AlertTitle>
+                            {message}
+                        </Alert>
+                    </Dialog>
+                    <Dialog open={openSuccess} onClose={handleClickSuccess}>
+                        <Alert severity="success">
+                            <AlertTitle>Success</AlertTitle>
+                            {message}
+                        </Alert>
+                    </Dialog>
                 </div>
-                <Button style={{margin: "10px 0 auto"}} variant="contained" onClick={sendData}>register
-                    user</Button>
-                <Dialog open={openWarning} onClose={handleClickWarning}>
-                    <Alert severity="warning">
-                        <AlertTitle>Warning</AlertTitle>
-                        {message}
-                    </Alert>
-                </Dialog>
-                <Dialog open={openSuccess} onClose={handleClickSuccess}>
-                    <Alert severity="success">
-                        <AlertTitle>Success</AlertTitle>
-                        {message}
-                    </Alert>
-                </Dialog>
             </FormControl>
         </div>
     );

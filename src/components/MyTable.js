@@ -1,5 +1,4 @@
 import * as React from 'react';
-import PropTypes from 'prop-types';
 import {useTheme} from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Table from '@mui/material/Table';
@@ -17,6 +16,8 @@ import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight';
 import LastPageIcon from '@mui/icons-material/LastPage';
 import {useEffect, useState} from "react";
 import TableHead from "@mui/material/TableHead";
+import Button from "@mui/material/Button";
+import {useSelector} from "react-redux";
 
 function TablePaginationActions(props) {
     const theme = useTheme();
@@ -73,21 +74,34 @@ function TablePaginationActions(props) {
 }
 
 
-export default function TestTable() {
-    const [page, setPage] = React.useState(0);
-    const [rowsPerPage, setRowsPerPage] = React.useState(5);
+export default function MyTable() {
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(5);
     const [rows, setRows] = useState([])
 
-    const url = 'http://localhost:8080/api/dot';
-    useEffect(() => {
-        fetch(url).then((response) => {
-            if (!response.ok) throw new Error(response.status);
-            else return response.json();
-        }).then((data) => {
-            setRows(data)
-            console.log(data)
+    const url = useSelector(state => state.url) + '/api/dot';
+
+    function loadDots(){
+        fetch(url,{
+            method: 'GET'
+        }).then((response) => {
+            if(!response.ok) throw new Error(response.status)
+            response.json().then(response => setRows(response))
         })
+    }
+
+    useEffect(() => {
+        loadDots()
     }, [])
+
+    function deleteDot(id) {
+        fetch(url + '/' + id,{
+            method: 'DELETE'
+        }).then((response) => {
+            loadDots(response)
+        })
+
+    }
 
     const emptyRows =
         page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
@@ -111,6 +125,8 @@ export default function TestTable() {
                         <TableCell align="right">Y coordinate</TableCell>
                         <TableCell align="right">Radius</TableCell>
                         <TableCell align="right">Status</TableCell>
+                        <TableCell/>
+                        <TableCell/>
                     </TableRow>
                 </TableHead>
                 <TableBody>
@@ -134,12 +150,18 @@ export default function TestTable() {
                             <TableCell style={{width: 160}} align="right">
                                 {row.status}
                             </TableCell>
+                            <TableCell style={{width: 160}} align="right">
+                                <Button onClick={()=>deleteDot(row.id)}>Delete</Button>
+                            </TableCell>
+                            <TableCell style={{width: 160}} align="right">
+                                <Button>View</Button>
+                            </TableCell>
                         </TableRow>
                     ))}
 
                     {emptyRows > 0 && (
                         <TableRow style={{height: 53 * emptyRows}}>
-                            <TableCell colSpan={6}/>
+                            <TableCell colSpan={8}/>
                         </TableRow>
                     )}
                 </TableBody>

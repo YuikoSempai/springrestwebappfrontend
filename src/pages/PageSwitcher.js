@@ -1,16 +1,18 @@
 import React from 'react';
-import {Route, BrowserRouter, Routes} from 'react-router-dom';
-import FormPage from '../pages/FormPage';
-import TablePage from '../pages/TablePage';
-import MainPage from '../pages/MainPage';
-import AppBarComponent from "./AppBarComponent";
-import RegistrationPage from "../pages/RegistrationPage";
-import LogoutPage from "../pages/LogoutPage";
-import ProfilePage from "../pages/ProfilePage";
+import {Route, Routes} from 'react-router-dom';
+import FormPage from './FormPage';
+import TablePage from './TablePage';
+import MainPage from './MainPage';
+import AppBarComponent from "../components/AppBarComponent";
+import RegistrationPage from "./RegistrationPage";
+import LogoutPage from "./LogoutPage";
+import ProfilePage from "./ProfilePage";
+import LoginPage from "./LoginPage";
 
 const PageSwitcher = function () {
+
     return (
-        <BrowserRouter>
+        <div>
             <AppBarComponent/>
             <Routes>
                 <Route exact path='/form' element={<FormPage/>}/>
@@ -19,8 +21,9 @@ const PageSwitcher = function () {
                 <Route exact path='/registration' element={<RegistrationPage/>}/>
                 <Route exact path='/logout' element={<LogoutPage/>}/>
                 <Route exact path='/profile' element={<ProfilePage/>}/>
+                <Route exact path='/login' element={<LoginPage/>}/>
             </Routes>
-        </BrowserRouter>
+        </div>
     );
 }
 
