@@ -1,7 +1,7 @@
 import * as React from 'react';
 import TextField from '@mui/material/TextField';
 import {useState, useEffect} from "react";
-import {Button, FormControl, Paper} from "@mui/material";
+import {Alert, Button, Collapse, FormControl, Paper} from "@mui/material";
 import {useTheme} from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Table from '@mui/material/Table';
@@ -18,7 +18,7 @@ import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight';
 import LastPageIcon from '@mui/icons-material/LastPage';
 import TableHead from "@mui/material/TableHead";
 import LoadingButton from "@mui/lab/LoadingButton";
-import {useSelector} from "react-redux";
+import {useDispatch, useSelector} from "react-redux";
 import Typography from "@mui/material/Typography";
 
 function TablePaginationActions(props) {
@@ -76,17 +76,22 @@ function TablePaginationActions(props) {
         </Box>
     );
 }
+
 //TODO:попробовать убрать задний фон при перерисовке
 export default function Form() {
-    const [canvasFlag, setCanvasFlag] = useState(false)
+    let canvasFlag = useSelector(state => state.canvas_flag);
     const [loading, setLoading] = useState(false);
-    const [x, setX] = useState('')
+    const [x, setX] = useState(0)
     const [y, setY] = useState('')
-    const [r, setR] = useState('')
+    const [r, setR] = useState(0)
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(5);
     const [rows, setRows] = useState([])
     const url = useSelector(state => state.url) + '/api/dot'
+    const [message, setMessage] = useState('')
+    const [openErrorAlert, setOpenErrorAlert] = useState(false)
+    const [openInfoAlert, setOpenInfoAlert] = useState(false)
+    const dispatch = useDispatch();
 
     const loadDots = () => {
         fetch(url, {
@@ -94,24 +99,30 @@ export default function Form() {
         }).then((response) => {
             if (!response.ok && response.status !== 404) throw new Error(response.status.toString())
             if (response.status === 404) {
-                let x = 1
-                let y = 1
-                let r = 1
                 setRows([{x, y, r}])
             } else response.json().then(response => setRows(response))
         })
     }
 
     const handleRChange = (radius) => {
-        setR(radius)
-        drawGraphic(radius)
+        if (radius < 0) {
+            setMessage("It's cool variant, but radius can't be less then 0")
+            setOpenErrorAlert(false)
+            setOpenInfoAlert(true)
+        } else {
+            setOpenErrorAlert(false)
+            setOpenInfoAlert(false)
+            setR(radius)
+            loadDots()
+            drawField()
+        }
     }
 
     function deleteDot(id) {
         fetch(url + '/' + id, {
             method: 'DELETE'
         }).then((response) => {
-            setTimeout(() => loadDots(response), 200)
+            loadDots(response)
         })
 
     }
@@ -129,40 +140,30 @@ export default function Form() {
     };
 
     const sendData = function () {
-        let x = document.getElementById('x').value
-        let y = document.getElementById('y').value
-        let r = document.getElementById('r').value
-        console.log(x, y,r)
+        console.log(x, y, r)
         if (x !== '' && y !== '' && r !== '') {
             setLoading(true);
-
-            fetch(url, {
-                method: "POST", headers: {
-                    'Accept': 'application/json', 'Content-Type': 'application/json'
-                }, body: JSON.stringify({x, y, r})
-            }).then(() => {
-                loadDots()
-                setLoading(false);
-            })
-                .catch(() => {
-                    setLoading(false)
-                });
-            setX('')
-            setY('')
-            handleRChange(r)
+            checkAndSend(x, y, r);
+        } else {
+            setMessage("Not all fields are field")
+            setOpenInfoAlert(true)
+            setOpenErrorAlert(false)
         }
     }
 
-    useEffect(drawField)
 
+    useEffect(drawField)
+    // useEffect(addEventListenerToCanvas)
 
     function drawField() { // drawing grid
         let canvas = document.getElementById('image');
         if (canvas.getContext) {
             let ctx = canvas.getContext('2d');
-            ctx.lineWidth = 2;
-            ctx.fillStyle = "rgba(256, 256, 256, 0.8)"; // background fill
+            ctx.clearRect(0, 0, canvas.width, canvas.height)
+            ctx.fillStyle = "rgba(256, 256, 256, 1)"; // background fill
             ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.lineWidth = 2;
+            ctx.clearRect(0, 0, canvas.width, canvas.height)
             for (let x = 40; x < 361; x += 40) { // gird
                 ctx.moveTo(x, 0);
                 ctx.lineTo(x, 400);
@@ -195,19 +196,20 @@ export default function Form() {
 
             //circle
             ctx.moveTo(200, 200);
-            ctx.arc(200, 200, radius * 40, 0, Math.PI / 2);
+            ctx.arc(200, 200, radius * 20, 3 * Math.PI / 2, 0);
             ctx.fill();
 
             //rectangle
-            ctx.fillRect(200 - radius * 40, 200 - radius * 20, radius * 40, radius * 20);
+            ctx.fillRect(200 - radius * 20, 200 - radius * 40, radius * 20, radius * 40);
             ctx.moveTo(200, 200)
-            ctx.lineTo(200, 200 - radius * 20)
-            ctx.lineTo(200 - radius * 40, 200 - radius * 20)
-            ctx.lineTo(200, 200 - radius * 20)
+            ctx.lineTo(200, 200 - radius * 40)
+            ctx.lineTo(200 - radius * 20, 200 - radius * 40)
+            ctx.lineTo(200 - radius * 20, 200)
+            // ctx.lineTo(200)
 
             //triangle
-            ctx.moveTo(200, 200 - radius * 40);
-            ctx.lineTo(200 + radius * 20, 200);
+            ctx.moveTo(200 - radius * 20, 200);
+            ctx.lineTo(200, 200 + radius * 20);
             ctx.lineTo(200, 200);
             ctx.fill();
 
@@ -225,11 +227,11 @@ export default function Form() {
                     const circle = new Path2D();
                     circle.moveTo(200 + row.x * 40, 200 - row.y * 40);
                     circle.arc(200 + row.x * 40, 200 - row.y * 40, 10, 0, 2 * Math.PI)
-                    if (row.status) {
+                    if (row.status === "true") {
                         //green
                         ctx.fillStyle = 'green';
                     } else {
-                        //black
+                        //red
                         ctx.fillStyle = 'red';
                     }
                     ctx.fill(circle);
@@ -240,24 +242,38 @@ export default function Form() {
     }
 
     function addEventListenerToCanvas() {
-        handleRChange(r)
-        const canvas = document.querySelector('canvas');
 
+        const canvas = document.querySelector('canvas');
+        console.log(canvasFlag)
         if (!canvasFlag) {
             canvas.addEventListener('mousedown', function (e) {
                 getAndSendCursorPosition(canvas, e);
             })
-            setCanvasFlag(true)
+            dispatch({type:"SET_CANVAS_FLAG",payload:true})
         }
     }
 
     function getAndSendCursorPosition(canvas, event) {
-        let radius = document.getElementById('r');
-        if (radius.value !== "") {
+        if (r !== "") {
             const rect = canvas.getBoundingClientRect()
             let x = rounded((-1) * (200 - (event.clientX - rect.left)) / 40)
             let y = rounded((200 - (event.clientY - rect.top)) / 40)
-            let r = radius.value
+            let r = document.getElementById('rValue');
+            console.log(x,y,parseInt(r.innerText))
+            checkAndSend(x, y, parseInt(r.innerText))
+        } else {
+            setMessage("Select radius first")
+            setOpenErrorAlert(true)
+            setOpenInfoAlert(false)
+        }
+    }
+
+    const rounded = function (number) {
+        return +number.toFixed(2);
+    }
+
+    function checkAndSend(x, y, r) {
+        if (x <= 4 && x >= -4 && y >= -3 && y <= 3 && r >= -4 && r <= 4) {
             fetch(url, {
                 method: "POST", headers: {
                     'Accept': 'application/json', 'Content-Type': 'application/json'
@@ -270,16 +286,19 @@ export default function Form() {
                     setLoading(false)
                 });
         } else {
-            alert("Select radius first")
+            setMessage("Wrong input data")
+            setLoading(false)
+            setOpenInfoAlert(false)
+            setOpenErrorAlert(true)
         }
     }
-    useEffect(loadDots, [loadDots])
-    const rounded = function (number) {
-        return +number.toFixed(2);
-    }
 
+    const buttonInput1 = [-4, -3, -2]
+    const buttonInput2 = [-1, 0, 1]
+    const buttonInput3 = [2, 3, 4]
 
-    return (<div>
+    return (
+        <div>
             <div style={{margin: '20px auto'}}>
                 <Typography
                     variant="h3"
@@ -294,39 +313,128 @@ export default function Form() {
                     Add dot
                 </Typography>
             </div>
+            <div>
+                <Collapse in={openErrorAlert}>
+                    <Alert severity="error">{message}</Alert>
+                </Collapse>
+                <Collapse in={openInfoAlert}>
+                    <Alert severity="info">{message}</Alert>
+                </Collapse>
+            </div>
             <div sx={{display: {desktop: 'block', tablet: 'grid'}}}>
-                <FormControl sx={{margin: "50px 50px 50px"}}>
-                    <div style={{margin: "10px 0 auto"}}>
+                <FormControl sx={{margin: "0 50px  0"}}>
+                    <Paper elevation={3}>
+                        <Typography>X coordinate</Typography>
+                        <div>
+                            {
+                                buttonInput1.map(inputData => (
+                                    <Button
+                                        sx={{margin: "5px 5px 5px", align: "center"}}
+                                        size="small"
+                                        variant="contained"
+                                        onClick={() => setX(inputData)}
+                                        key={inputData}
+                                    >
+                                        {inputData}
+                                    </Button>
+                                ))
+                            }
+                        </div>
+                        <div>
+                            {
+                                buttonInput2.map(inputData => (
+                                    <Button
+                                        sx={{margin: "5px 5px 5px", align: "center"}}
+                                        size="small"
+                                        variant="contained"
+                                        onClick={() => setX(inputData)}
+                                        key={inputData}
+                                    >
+                                        {inputData}
+                                    </Button>
+                                ))
+                            }
+                        </div>
+                        <div>
+                            {
+                                buttonInput3.map(inputData => (
+                                    <Button
+                                        sx={{margin: "5px 5px 5px", align: "center"}}
+                                        size="small"
+                                        variant="contained"
+                                        onClick={() => setX(inputData)}
+                                        key={inputData}
+                                    >
+                                        {inputData}
+                                    </Button>
+                                ))
+                            }
+                        </div>
+                        <Typography>X = {x}</Typography>
+                    </Paper>
+                    <Paper elevation={3} style={{margin: "10px 0 auto", height: "100px"}}>
+
                         <TextField
-                            required
-                            id="x"
-                            label="X coordinate"
-                            value={x}
-                            onChange={event => setX(event.target.value)}
-                        />
-                    </div>
-                    <div style={{margin: "10px 0 auto"}}>
-                        <TextField
+                            sx={{margin: "20px 0 auto", width: "90%"}}
                             required
                             id="y"
                             label="Y coordinate"
-
                             value={y}
-                            onChange={event => setY(event.target.value)}
+                            onChange={event => setY(parseInt(event.target.value))}
                         />
-                    </div>
-                    <div style={{margin: "10px 0 auto"}}>
-                        <TextField
-                            required
-                            id="r"
-                            label="Radius"
-                            value={r}
-                            onChange={event => handleRChange(event.target.value)}
-                        />
-                    </div>
+                    </Paper>
+                    <Paper elevation={3} style={{margin: "10px 0 auto"}}>
+                        <Typography>Radius</Typography>
+                        <div>
+                            {
+                                buttonInput1.map(inputData => (
+                                    <Button
+                                        sx={{margin: "5px 5px 5px", align: "center"}}
+                                        size="small"
+                                        variant="contained"
+                                        onClick={() => handleRChange(inputData)}
+                                        key={inputData}
+                                    >
+                                        {inputData}
+                                    </Button>
+                                ))
+                            }
+                        </div>
+                        <div>
+                            {
+                                buttonInput2.map(inputData => (
+                                    <Button
+                                        sx={{margin: "5px 5px 5px", align: "center"}}
+                                        size="small"
+                                        variant="contained"
+                                        onClick={() => handleRChange(inputData)}
+                                        key={inputData}
+                                    >
+                                        {inputData}
+                                    </Button>
+                                ))
+                            }
+                        </div>
+                        <div>
+                            {
+                                buttonInput3.map((inputData) => (
+                                    <Button
+                                        sx={{margin: "5px 5px 5px", align: "center"}}
+                                        size="small"
+                                        variant="contained"
+                                        onClick={() => handleRChange(inputData)}
+                                        key={inputData}
+                                    >
+                                        {inputData}
+                                    </Button>
+                                ))
+                            }
+                        </div>
+                        <Typography id="rValue">{r}</Typography>
+                    </Paper>
                     <div style={{margin: "10px 0 auto"}}>
                         <LoadingButton
-                            variant="contained"
+                            variant="outlined"
                             sx={{margin: "10px 0 auto", width: '100%'}}
                             onClick={sendData}
                             loading={loading}
@@ -337,7 +445,8 @@ export default function Form() {
                 </FormControl>
                 <Typography sx={{display: {mobile: 'flex', table: 'flex', desktop: 'none'}}}></Typography>
                 <canvas
-                    onMouseEnter={() => addEventListenerToCanvas()}
+                    onMouseEnter={addEventListenerToCanvas}
+                    style={{margin: "60px 0 0"}}
                     width="400"
                     height="400"
                     id="image"

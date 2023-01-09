@@ -11,10 +11,9 @@ import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
-import AdbIcon from '@mui/icons-material/Adb';
+import PsychologyIcon from '@mui/icons-material/Psychology';
 import {useNavigate} from "react-router-dom";
 import {useDispatch, useSelector} from "react-redux";
-
 export default function AppBarComponent() {
 
     const [anchorElNav, setAnchorElNav] = React.useState(null);
@@ -22,6 +21,7 @@ export default function AppBarComponent() {
     const dispatch = useDispatch()
     let navigate = useNavigate();
     const url = useSelector(state => state.url)
+    const authFlag = useSelector(state => state.auth_flag)
     const routeChange = function (url) {
         navigate(url);
     }
@@ -68,7 +68,7 @@ export default function AppBarComponent() {
         <AppBar position="static">
             <Container maxWidth="xl">
                 <Toolbar disableGutters>
-                    <AdbIcon sx={{display: {mobile: 'none', tablet: 'flex'}, mr: 1}}/>
+                    <PsychologyIcon sx={{display: {mobile: 'none', tablet: 'flex'}, mr: 1}}/>
                     <Typography
                         variant="h6"
                         noWrap
@@ -115,18 +115,18 @@ export default function AppBarComponent() {
                                 display: {mobile: 'block', tablet: 'none'},
                             }}
                         >
-                            <MenuItem key='Main' onClick={switchToMainPage}>
+                            <MenuItem key='Main' onClick={switchToMainPage} disabled={!authFlag}>
                                 <Typography textAlign="center">Main</Typography>
                             </MenuItem>
-                            <MenuItem key='Form' onClick={switchToFormPage}>
+                            <MenuItem key='Form' onClick={switchToFormPage} disabled={!authFlag}>
                                 <Typography textAlign="center">Form</Typography>
                             </MenuItem>
-                            <MenuItem key='Table' onClick={switchToTablePage}>
+                            <MenuItem key='Table' onClick={switchToTablePage} disabled={!authFlag}>
                                 <Typography textAlign="center">Table</Typography>
                             </MenuItem>
                         </Menu>
                     </Box>
-                    <AdbIcon sx={{display: {mobile: 'flex', tablet: 'none'}, mr: 1}}/>
+                    <PsychologyIcon sx={{display: {mobile: 'flex', tablet: 'none'}, mr: 1}}/>
                     <Typography
                         variant="h5"
                         noWrap
@@ -146,6 +146,7 @@ export default function AppBarComponent() {
                     </Typography>
                     <Box sx={{flexGrow: 1, display: {mobile: 'none', tablet: 'flex'}}}>
                         <Button
+                            disabled={!authFlag}
                             key='Main'
                             onClick={switchToMainPage}
                             sx={{my: 2, color: 'white', display: 'block'}}
@@ -153,6 +154,7 @@ export default function AppBarComponent() {
                             Main
                         </Button>
                         <Button
+                            disabled={!authFlag}
                             key='Form'
                             onClick={switchToFormPage}
                             sx={{my: 2, color: 'white', display: 'block'}}
@@ -160,6 +162,7 @@ export default function AppBarComponent() {
                             Form
                         </Button>
                         <Button
+                            disabled={!authFlag}
                             key='Table'
                             onClick={switchToTablePage}
                             sx={{my: 2, color: 'white', display: 'block'}}
@@ -169,9 +172,9 @@ export default function AppBarComponent() {
                     </Box>
 
                     <Box sx={{flexGrow: 0}}>
-                        <Tooltip title="Open settings">
+                        <Tooltip title="Open menu">
                             <IconButton onClick={handleOpenUserMenu} sx={{p: 0}}>
-                                <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg"/>
+                                <Avatar alt="Remy Sharp" src="./../images/5.jpg"/> 
                             </IconButton>
                         </Tooltip>
                         <Menu
@@ -190,7 +193,7 @@ export default function AppBarComponent() {
                             open={Boolean(anchorElUser)}
                             onClose={handleCloseUserMenu}
                         >
-                            <MenuItem key="Logout" onClick={handleLogoutButton}>
+                            <MenuItem key="Logout" onClick={handleLogoutButton} disabled={!authFlag}>
                                 <Typography textAlign="center">Logout</Typography>
                             </MenuItem>
                         </Menu>

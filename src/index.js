@@ -4,17 +4,11 @@ import './styles/index.css';
 import App from './App';
 import {createStore} from "redux";
 import {Provider} from "react-redux";
-import { persistStore, persistReducer } from 'redux-persist'
-import storage from 'redux-persist/lib/storage'
 
-const persistConfig = {
-    key: 'root',
-    storage,
-}
 
 const defaultState = {
     auth_flag: false,
-    url: "http://localhost:8080",
+    url: "http://localhost:24900",
     canvas_flag: false,
 }
 
@@ -30,10 +24,7 @@ const reducer = (state = defaultState, action) => {
     }
 }
 
-const persistedReducer = persistReducer(persistConfig, reducer);
-
-const store = createStore(persistedReducer);
-const persistor = persistStore(store);
+const store = createStore(reducer);
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

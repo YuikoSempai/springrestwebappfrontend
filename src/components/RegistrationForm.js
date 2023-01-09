@@ -1,7 +1,7 @@
 import * as React from 'react';
 import TextField from '@mui/material/TextField';
 import {useState} from "react";
-import {Alert, AlertTitle, Dialog, FormControl} from "@mui/material";
+import {Alert, Collapse, FormControl} from "@mui/material";
 import LoadingButton from "@mui/lab/LoadingButton"
 import {useSelector} from "react-redux";
 import {useNavigate} from "react-router-dom";
@@ -12,26 +12,18 @@ export default function RegistrationForm() {
 
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
-    const [openSuccess, setOpenSuccess] = React.useState(false)
-    const [openWarning, setOpenWarning] = React.useState(false)
-    const [message, setMessage] = React.useState('')
     const [registerLoading, setRegisterLoading] = React.useState(false);
     const [loginLoading, setLoginLoading] = React.useState(false);
+    const [message, setMessage] = React.useState('')
+    const [openErrorAlert, setOpenErrorAlert] = useState(false)
+    const [openInfoAlert, setOpenInfoAlert] = useState(false)
 
     const url = useSelector(state => state.url) + '/auth/registration'
     let navigate = useNavigate()
 
-    const handleClickSuccess = () => {
-        setOpenSuccess(!openSuccess);
-    };
-
-    const handleClickWarning = () => {
-        setOpenWarning(!openWarning);
-    }
-
     const handleLogButton = () => {
         setLoginLoading(true)
-        setTimeout(() => navigate("../login"), 1000)
+        navigate("../login")
     }
 
     const sendData = function (event) {
@@ -45,30 +37,30 @@ export default function RegistrationForm() {
                 }, body: JSON.stringify({username, password, roles})
             }).then(r => {
                     if (r.status !== 200) {
-                        handleClickSuccess();
                         setMessage("User is exists")
+                        setOpenInfoAlert(true)
                     } else {
                         setMessage("User was register")
-                        handleClickSuccess()
+                        setOpenInfoAlert(true)
                         navigate("../login")
                     }
                     setRegisterLoading(false)
                 }
             ).catch(() => {
                 setMessage("Can't connect to the server")
+                setOpenErrorAlert(true)
                 setRegisterLoading(false)
-                handleClickWarning()
             });
             setUsername('')
             setPassword('')
         } else {
             setMessage("Not all fields are field")
-            setOpenWarning(true)
+            setOpenInfoAlert(true)
         }
     }
     return (
         <div>
-            <div style={{margin: '100px auto'}}>
+            <div style={{margin: '50px auto'}}>
                 <Typography
                     variant="h3"
                     sx={{display: {mobile: 'none', tablet: 'none', desktop: 'block'}}}
@@ -81,6 +73,14 @@ export default function RegistrationForm() {
                 >
                     Registration
                 </Typography>
+            </div>
+            <div>
+                <Collapse in={openErrorAlert}>
+                    <Alert severity="error">{message}</Alert>
+                </Collapse>
+                <Collapse in={openInfoAlert}>
+                    <Alert severity="info">{message}</Alert>
+                </Collapse>
             </div>
             <FormControl sx={{width: {mobile: "30%", desktop: "50%"}}}>
                 <div style={{margin: "10px 0 auto"}}>
@@ -122,18 +122,6 @@ export default function RegistrationForm() {
                         <Typography sx={{display: {mobile: 'none', tablet: 'flex'}}}>Login Page</Typography>
                         <Typography sx={{display: {tablet: 'none', mobile: 'flex'}}}>login</Typography>
                     </LoadingButton>
-                    <Dialog open={openWarning} onClose={handleClickWarning}>
-                        <Alert severity="warning">
-                            <AlertTitle>Warning</AlertTitle>
-                            {message}
-                        </Alert>
-                    </Dialog>
-                    <Dialog open={openSuccess} onClose={handleClickSuccess}>
-                        <Alert severity="success">
-                            <AlertTitle>Success</AlertTitle>
-                            {message}
-                        </Alert>
-                    </Dialog>
                 </div>
             </FormControl>
         </div>

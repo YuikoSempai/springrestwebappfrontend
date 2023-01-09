@@ -16,7 +16,7 @@ const MainPage = () => {
 
     return (
         <div>
-            <div>
+            <div style={{margin: '50px auto'}}>
                 <Typography
                     variant="h3"
                     sx={{display: {mobile: 'none', tablet: 'none', desktop: 'block'}}}
@@ -29,8 +29,8 @@ const MainPage = () => {
                 >
                     Dots v 1.0
                 </Typography>
-                <Main/>
             </div>
+            <Main/>
         </div>
     );
 };

@@ -12,5 +12,8 @@ export const theme = createTheme({
             fullsize: 1536
         },
     },
+    typography: {
+        fontFamily: "Comic Sans MS"
+    }
 });
 

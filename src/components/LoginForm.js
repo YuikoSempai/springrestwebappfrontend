@@ -2,7 +2,7 @@ import React, {useState} from 'react';
 import {Alert, Collapse, FormControl} from "@mui/material";
 import TextField from "@mui/material/TextField";
 import LoadingButton from "@mui/lab/LoadingButton";
-import {useDispatch} from "react-redux";
+import {useDispatch, useSelector} from "react-redux";
 import {useNavigate} from "react-router-dom";
 import Typography from "@mui/material/Typography";
 
@@ -17,14 +17,13 @@ const LoginForm = () => {
     const [openInfoAlert, setOpenInfoAlert] = useState(false)
     const navigate = useNavigate()
     const dispatch = useDispatch()
-
+    const url = useSelector(state => state.url) + '/auth/login'
     const sendData = () => {
         setOpenInfoAlert(false)
         setOpenErrorAlert(false)
         if (username !== "" && password !== "") {
             setLoginLoading(true);
             let http = new XMLHttpRequest();
-            const url = 'http://localhost:8080/auth/login';
             http.open('POST', url, true);
             http.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
             let body = "username=" + username + "&password=" + password
@@ -46,7 +45,7 @@ const LoginForm = () => {
     }
 
     const changeRoute = (url) => {
-        setTimeout(() => navigate(url), 1000)
+        navigate(url)
     }
 
     const handleRegButton = () => {
@@ -57,7 +56,7 @@ const LoginForm = () => {
 
     return (
         <div>
-            <div style={{margin: '100px auto'}}>
+            <div style={{margin: '50px auto'}}>
                 <Typography
                     variant="h3"
                     sx={{display: {mobile: 'none', tablet: 'none', desktop: 'block'}}}

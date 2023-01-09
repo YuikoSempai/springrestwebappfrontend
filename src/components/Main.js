@@ -86,6 +86,9 @@ export default function Main() {
                         Вариант: 12119.
                     </Typography>
                     <Typography>
+                        Группа: P32121.
+                    </Typography>
+                    <Typography>
                         <a href="https://github.com/YuikoSempai">GitHub</a>
                     </Typography>
                 </AccordionDetails>
